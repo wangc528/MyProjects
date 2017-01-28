@@ -1,0 +1,263 @@
+Red Wine Quality Exploration by Grace Wang
+========================================================
+
+<span style="color:blue">
+This report explored a dataset containing quality and attributes for approximately 1600 wines, and intented to answer: Which chemical properties influence the quality of red wines?
+</span>
+
+```{r, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using
+# in your analysis in this code chunk.
+
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(GGally)
+library(RColorBrewer)
+library(scales)
+library(memisc)
+library(reshape)
+```
+
+```{r echo=FALSE}
+# Load the Data
+wine = read.csv('wineQualityReds.csv')
+head(wine)
+```
+
+
+# Univariate Plots Section
+```{r, Univariate_Plots}
+wine$quality = factor(wine$quality)
+ggplot(aes(x=quality), data = wine)+
+  geom_histogram(stat="count", color = I('black'),fill = I('red'))
+```
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+```{r}
+str(wine)
+```
+
+<span style="color:blue">
+This tidy data set contains 1,599 red wines with 11 variables on the chemical properties of the wine. At least 3 wine experts rated the quality of each wine, providing a rating between 0 (very bad) and 10 (very excellent). The dataset contains wine quality from 3 to 8.
+</span>
+
+### What is/are the main feature(s) of interest in your dataset?
+
+<span style="color:blue">
+11 attributes are analyzed in this report, including: 
+ - fixed.acidity	
+ - volatile.acidity	
+ - citric.acid	
+ - residual.sugar	
+ - chlorides	
+ - free.sulfur.dioxide	
+ - total.sulfur.dioxide	
+ - density	
+ - pH	
+ - sulphates	
+ - alcohol
+</span>
+ 
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+<span style="color:blue">
+ - year of the wine
+ - origin of the wine
+ - type of the wine, Cabernet Franc, Cabernet Sauvignon, Gamay, Grenache/Garnacha and Malbec etc.
+</span>
+
+### Did you create any new variables from existing variables in the dataset?
+<span style="color:blue">
+No. However the quality is converted from int to factor.
+</span>
+
+### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
+
+```{r echo=FALSE}
+par(mfrow=c(3,4)) 
+hist(wine$fixed.acidity)
+hist(wine$volatile.acidity)
+hist(wine$citric.acid)
+hist(wine$residual.sugar)
+hist(wine$chlorides)
+hist(wine$free.sulfur.dioxide)
+hist(wine$total.sulfur.dioxide)
+hist(wine$density)
+hist(wine$pH)
+hist(wine$sulphates)
+hist(wine$alcohol)
+```
+
+<span style="color:blue">
+All variables seem to be within a reasonable distribution.
+</span>
+
+# Bivariate Plots Section
+```{r, Bivariate_Plots_0}
+quality_groups = group_by(wine, quality)
+wine.by_quality = summarise(quality_groups, 
+          fixed.acidity_mean = mean(fixed.acidity),
+          volatile.acidity_mean = mean(volatile.acidity),
+          citric.acid_mean = mean(citric.acid),
+          residual.sugar_mean = mean(residual.sugar),
+          chlorides_mean = mean(chlorides),
+          free.sulfur.dioxide_mean = mean(free.sulfur.dioxide),
+          total.sulfur.dioxide_mean = mean(total.sulfur.dioxide),
+          density_mean = mean(density),
+          pH_mean = mean(pH),
+          sulphates_mean = mean(sulphates),
+          alcohol_mean = mean(alcohol),
+          n = n())
+head(wine.by_quality,10)
+```
+
+
+```{r, Bivariate_Plots}
+WineQuality =  c(3,4,5,6,7,8)
+
+c1 = cor.test(as.numeric(wine.by_quality$quality),wine.by_quality$fixed.acidity_mean)
+
+p1 <- ggplot(aes(y=WineQuality, x=fixed.acidity_mean), data = wine.by_quality) +
+  geom_line(size = 1)
+
+p2 <- ggplot(aes(y= WineQuality, x=volatile.acidity_mean), data = wine.by_quality) +
+  geom_line(size = 1)
+
+p3 <- ggplot(aes(y= WineQuality, x=citric.acid_mean), data = wine.by_quality) +
+  geom_line(size = 1)
+
+p4 <- ggplot(aes(y= WineQuality, x=residual.sugar_mean), data = wine.by_quality) +
+  geom_line(size = 1)
+
+p5 <- ggplot(aes(y= WineQuality, x=free.sulfur.dioxide_mean), data = wine.by_quality) +
+  geom_line(size = 1)
+
+p6 <- ggplot(aes(y= WineQuality, x=total.sulfur.dioxide_mean), data = wine.by_quality) +
+  geom_line(size = 1)
+
+p7 <- ggplot(aes(y= WineQuality, x=density_mean), data = wine.by_quality) +
+  geom_line(size = 1)
+
+p8 <- ggplot(aes(y= WineQuality, x=pH_mean), data = wine.by_quality) +
+  geom_line(size = 1)
+
+p9 <- ggplot(aes(y= WineQuality, x=sulphates_mean), data = wine.by_quality) +
+  geom_line(size = 1)
+
+p10 <- ggplot(aes(y= WineQuality, x=alcohol_mean), data = wine.by_quality) +
+  geom_line(size = 1)+
+   ggtitle(toString(c1) )+
+   theme(plot.title=element_text(size=5))
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, ncol = 4)
+
+ggplot(aes(x=quality , y=citric.acid), data = wine)+
+  geom_boxplot(fill = "grey80", colour = "#3366FF")+
+  geom_jitter(fill = I('red'),shape = 21,alpha = 1/3, width = 0.15)
+
+```
+
+
+```{r, Bivariate_Plots_2, message=FALSE}
+ggpairs(subset(wine, select = -c(X)),
+  lower = list(continuous = wrap("points", shape = I('.'))), 
+  upper = list(combo = wrap("box", outlier.shape = I('.'))))
+```
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+<span style="color:blue">
+Based on the ggpairs above, we observed the following relationship between the wine quality and other variables:
+ - negative correlation bewteen volatile.acidity and wine quality
+ - positive correlation bewteen citric.acid and wine quality
+ - positive correlation bewteen sulphates and wine quality
+</span>
+
+
+### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+<span style="color:blue">
+ - fixed.acidity is positive correlated to density. This makes sense since most of the wine volume is made of water, fixed.acidity is known as more dense than water
+ - fixed.acidity is negative correlated to PH. This makes sense since the more acid in a certain solution, the lower PH based on chemical knowedge.
+</span>
+
+### What was the strongest relationship you found?
+
+<span style="color:blue">
+Strongest relationship among all variables is between fixed.acidity and PH, with Corr = -0.683 
+Strongest relationship for wine quality is between alcohol and wine quality, with Corr = 0.476
+</span>
+
+# Multivariate Plots Section
+```{r, Multivariate_Plots}
+ggplot(data = wine,
+       aes(y = sulphates, x = alcohol,
+           color = quality)) +
+  geom_point() +
+  scale_color_brewer()
+
+
+ggplot(data = wine,
+       aes(y = volatile.acidity, x = alcohol,
+           color = quality)) +
+  geom_point() +
+  scale_color_brewer()
+
+ggplot(data = wine,
+       aes(y = citric.acid, x = alcohol,
+           color = quality)) +
+  geom_point() +
+  scale_color_brewer()
+
+ggplot(data = wine,
+       aes(y = pH, x = alcohol,
+           color = quality)) +
+  geom_point() +
+  scale_color_brewer()
+
+ggplot(data = wine,
+       aes(y = density, x = alcohol,
+           color = quality)) +
+  geom_point() +
+  scale_color_brewer()+
+  geom_smooth(method = 'lm')
+```
+
+
+```{r Building the Linear Model}
+m1 <- lm(I(as.numeric(quality)) ~ I(alcohol), data = wine)
+m2 <- update(m1, ~ . + sulphates)
+m3 <- update(m2, ~ . +volatile.acidity)
+m4 <- update(m3, ~ . + citric.acid)
+m5 <- update(m4, ~ . + pH)
+mtable(m1, m2, m3, m4, m5)
+```
+ 
+
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+<span style="color:blue">
+ - Fixed acidity and density are positive related to each other since the density of the acid is larger than water.
+ - Critic acidity and fixed acidity also strengthened each other
+ - sulphates seems always positive related to wine quality
+ - free sulfur dioxide is also positive related to total sulfur dioxide
+</span>
+
+### OPTIONAL: Did you create any models with your dataset? Discuss the strengths and limitations of your model.
+<span style="color:blue">
+The model was created based on the following 5 factors due to their high corr with wine quality:
+ - alcohol
+ - sulphates
+ - volatile.acidity
+ - citric.acid
+ - pH
+
+#### Quality = 2.112 + 0.327 $\times$ alcohol + 0.673 $\times$ sulphates  -1.284 $\times$ volatile.acidity -0.297 $\times$ citric.acid -0.475 $\times$ pH
+
+
+The model is in general able to reflect the relationship between wine quality and the factors listed above, and to predict the wine quality given its attributes. However, the model is based on a liner relationship, so it does not provide any information about the non-liner relationship factors such as residual sugar and sulphur dioxide.
+</span>
