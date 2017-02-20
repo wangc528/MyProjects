@@ -1,0 +1,27 @@
+import json
+import numpy as np
+import csv
+
+population_csv = csv.reader(open('../ACS_15_5YR_B01003_with_ann.csv'))
+population_dict = {}
+
+for row in population_csv:
+    key = row[1]
+    population_dict[key] = row[3]
+
+f = open("../us-10m.v1.json","r")
+
+s = f.read()
+MapJson = json.loads(s)
+
+for item in MapJson['objects']['counties']['geometries']:
+
+    temp_dict = {}
+    temp_dict["population"] = population_dict[item['id']]
+    item["properties"] = temp_dict
+f.close()
+
+
+ccc_string = json.dumps(MapJson)
+with open("../uscounty.json","w") as output:
+    output.write(ccc_string)
